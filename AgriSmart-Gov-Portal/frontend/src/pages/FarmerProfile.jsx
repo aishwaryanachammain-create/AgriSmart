@@ -1,365 +1,236 @@
-import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import Chart from "chart.js/auto";
-import apiService from "../services/api";
+import React, { useState } from 'react';
+import { 
+  User, Phone, MapPin, Calendar, Sprout, AlertTriangle, 
+  CheckCircle, ShieldCheck, ChevronRight, Download, Send, 
+  Droplet, Sun, Thermometer, Layers, Info, Award
+} from 'lucide-react';
 
-// To:
-import { ref, onValue } from "firebase/database";
-import { database } from "../config/firebase";
-
-
-
-function FarmerProfile() {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const [farmer, setFarmer] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [cropHealth, setCropHealth] = useState(null);
-  const [ndviMean, setNdviMean] = useState(0.78); // Default value
-  const [ndviStd, setNdviStd] = useState(0.18); // Default value
-  const [growthStage, setGrowthStage] = useState("Vegetative"); // Default value
-  const [ndviData, setNdviData] = useState([0.45, 0.52, 0.58, 0.65, 0.72, 0.75, 0.78]); // Default values
-
-  // Fetch farmer data
-  useEffect(() => {
-    const fetchFarmer = async () => {
-      if (!id) return;
-
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await apiService.getFarmer(id);
-        setFarmer(data);
-      } catch (err) {
-        setError(err.message);
-        console.error("Failed to fetch farmer:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchFarmer();
-  }, [id]);
-
-  // Fetch crop health data from Firebase
-  useEffect(() => {
-    if (!id) return;
-
-    const cropHealthRef = ref(database, 'crop_health');
-    const unsubscribe = onValue(cropHealthRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        const entries = Object.entries(data).filter(([_, val]) => val.user === id);
-        if (entries.length > 0) {
-          // Sort by key numerically ascending (more negative first, which is newer)
-          entries.sort((a, b) => Number(a[0]) - Number(b[0])); // Newest first
-
-          const latest = entries[0][1];
-          setCropHealth(latest);
-          
-          // Update NDVI mean, std, and growth stage from latest
-          if (latest['ndvi.mean']) setNdviMean(latest['ndvi.mean']);
-          if (latest['ndvi.std']) setNdviStd(latest['ndvi.std']);
-          if (latest.stage) setGrowthStage(latest.stage);
-          
-          // Build NDVI timeline (reverse to old to new)
-          const timeline = entries.reverse().map(([_, val]) => val['ndvi.mean'] || 0);
-          setNdviData(timeline);
-        }
-      }
-    }, (err) => {
-      console.error("Failed to fetch crop health data:", err);
-    });
-
-    return () => unsubscribe();
-  }, [id]);
-
-  useEffect(() => {
-    const canvas = document.getElementById("growthChart");
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    
-    // Generate week labels based on the length of ndviData
-    const weekLabels = ndviData.map((_, index) => `Week ${index + 1}`);
-    
-    const instance = new Chart(ctx, {
-      type: "line",
-      data: {
-         labels: weekLabels,
-     datasets: [
+const CROP_STAGES = [
   {
-    label: "NDVI Trend",
-    data: ndviData,
-    borderColor: "#4a944e",
-    backgroundColor: "rgba(74, 148, 78, 0.1)",
-    borderWidth: 3,
-    fill: true,
-    tension: 0.4,
+    id: 'sowing',
+    name: 'Sowing & Germination',
+    duration: 'Days 0–15',
+    status: 'completed',
+    healthIndex: '98%',
+    description: 'Seed placement and early sprout establishment in balanced soil.',
+    advisory: 'Maintain optimal surface moisture. Monitor for early seedling rot.',
+    inputs: 'NPK Basal Dose, Bio-fertilizer'
   },
-],
-
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          y: {
-            beginAtZero: true,
-            max: 1.0,
-            grid: { color: "rgba(0, 0, 0, 0.1)" },
-          },
-          x: { grid: { color: "rgba(0, 0, 0, 0.1)" } },
-        },
-      },
-    });
-    return () => instance.destroy();
-  }, [ndviData]); // Add ndviData as a dependency to update chart when data changes
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading farmer profile...</p>
-        </div>
-      </div>
-    );
+  {
+    id: 'vegetative',
+    name: 'Vegetative Growth',
+    duration: 'Days 16–45',
+    status: 'completed',
+    healthIndex: '92%',
+    description: 'Rapid canopy and root expansion. High nitrogen demand phase.',
+    advisory: 'Apply scheduled nitrogen top-dressing. Inspect foliage for early blight vectors.',
+    inputs: 'Urea Spray, Drip Fertigation'
+  },
+  {
+    id: 'tuber',
+    name: 'Tuber Initiation',
+    duration: 'Days 46–75',
+    status: 'active',
+    healthIndex: '85%',
+    description: 'Stolon tips swell to form tubers. Critical moisture sensitivity period.',
+    advisory: 'Maintain consistent soil moisture at 65-70%. Flagged for mild moisture stress on North plot.',
+    inputs: 'Potash Boost, Soil Sensor Check'
+  },
+  {
+    id: 'harvest',
+    name: 'Maturation & Harvest',
+    duration: 'Days 76–110',
+    status: 'upcoming',
+    healthIndex: 'Pending',
+    description: 'Skin set completion, foliage senescence, and mechanical harvest window.',
+    advisory: 'Schedule irrigation stop 10 days prior to target harvest date.',
+    inputs: 'Pre-harvest Inspection'
   }
+];
 
-  if (error) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-center">
-          <span className="material-icons text-red-500 text-4xl mb-4">
-            error
-          </span>
-          <p className="text-red-600 mb-2">Failed to load farmer profile</p>
-          <p className="text-gray-600 text-sm">{error}</p>
-          <button
-            onClick={() => navigate("/farmers")}
-            className="mt-4 bg-[#4a944e] text-white px-4 py-2 rounded-lg"
-          >
-            Back to Farmers
-          </button>
-        </div>
-      </div>
-    );
-  }
+export default function FarmerProfile() {
+  const [activeStage, setActiveStage] = useState('tuber');
 
-  if (!farmer) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-center">
-          <span className="material-icons text-gray-500 text-4xl mb-4">
-            person_off
-          </span>
-          <p className="text-gray-600">Farmer not found</p>
-          <button
-            onClick={() => navigate("/farmers")}
-            className="mt-4 bg-[#4a944e] text-white px-4 py-2 rounded-lg"
-          >
-            Back to Farmers
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const farmer = {
+    id: 'FARM-TN-2026-8842',
+    name: 'Ramanathan K.',
+    village: 'Nilgiris District, Zone 4',
+    phone: '+91 98421 77210',
+    fieldSize: '4.2 Acres',
+    crop: 'Potato (Kufri Jyoti)',
+    soilHealth: 'Optimal (pH 6.4)',
+    ndvi: 0.74,
+    status: 'Action Required',
+    joinedDate: 'March 2024'
+  };
+
+  const selectedStage = CROP_STAGES.find(s => s.id === activeStage);
 
   return (
-    <>
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={() => navigate("/farmers")}
-            className="bg-[#4a944e] text-white px-4 py-2 rounded-lg shadow-md 
-                   hover:bg-[#3a7a3e] hover:shadow-lg 
-                   active:scale-95 transition-all duration-200 flex items-center justify-center"
-          >
-            <span className="material-icons mr-2">arrow_back</span>Back to List
-          </button>
-          <h1 className="text-2xl font-bold">Farmer Profile: {farmer.name}</h1>
+    <div className="space-y-6 p-6 bg-[#fcfbf9] min-h-screen text-slate-800">
+      
+      {/* 1. FARMER SPOTLIGHT HERO CARD */}
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-bl-full opacity-50 -z-0 pointer-events-none" />
+        
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 relative z-10">
+          
+          {/* Left Profile Identity */}
+          <div className="flex items-start gap-4">
+            <div className="w-16 h-16 rounded-2xl bg-emerald-900 text-amber-400 flex items-center justify-center font-bold text-2xl shadow-md border border-emerald-800 shrink-0">
+              {farmer.name.charAt(0)}
+            </div>
+            <div>
+              <div className="flex items-center gap-3 flex-wrap">
+                <h1 className="text-2xl font-bold text-emerald-950 font-serif">{farmer.name}</h1>
+                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-900 border border-amber-200 flex items-center gap-1">
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  {farmer.status}
+                </span>
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  GIGW Verified
+                </span>
+              </div>
+
+              <div className="mt-2 flex flex-wrap items-center gap-4 text-xs text-slate-500">
+                <span className="flex items-center gap-1">
+                  <User className="w-3.5 h-3.5 text-emerald-700" /> ID: {farmer.id}
+                </span>
+                <span className="flex items-center gap-1">
+                  <MapPin className="w-3.5 h-3.5 text-emerald-700" /> {farmer.village}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Phone className="w-3.5 h-3.5 text-emerald-700" /> {farmer.phone}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Executive Quick-Actions */}
+          <div className="flex items-center gap-3 border-t lg:border-t-0 pt-4 lg:pt-0 border-slate-100">
+            <button className="px-4 py-2 rounded-xl bg-emerald-900 text-emerald-50 hover:bg-emerald-950 transition-all text-xs font-medium flex items-center gap-2 shadow-sm">
+              <Send className="w-3.5 h-3.5 text-amber-400" />
+              Dispatch SMS Alert
+            </button>
+            <button className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 transition-all text-xs font-medium flex items-center gap-2">
+              <Download className="w-3.5 h-3.5 text-slate-500" />
+              Export Dossier
+            </button>
+          </div>
+
         </div>
-        <div className="flex items-center space-x-4">
-          <span className="text-gray-600">ID: {farmer.id}</span>
-          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-            <span className="material-icons text-green-600">person</span>
+
+        {/* Quick Spec Bar */}
+        <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-slate-100">
+          <div className="bg-slate-50/80 p-3 rounded-xl border border-slate-100">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400 block">Land Holding</span>
+            <span className="text-sm font-semibold text-slate-800">{farmer.fieldSize}</span>
+          </div>
+          <div className="bg-slate-50/80 p-3 rounded-xl border border-slate-100">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400 block">Primary Crop</span>
+            <span className="text-sm font-semibold text-emerald-900">{farmer.crop}</span>
+          </div>
+          <div className="bg-slate-50/80 p-3 rounded-xl border border-slate-100">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400 block">NDVI Index</span>
+            <span className="text-sm font-semibold text-emerald-700">{farmer.ndvi} (Healthy)</span>
+          </div>
+          <div className="bg-slate-50/80 p-3 rounded-xl border border-slate-100">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400 block">Soil Profile</span>
+            <span className="text-sm font-semibold text-slate-800">{farmer.soilHealth}</span>
           </div>
         </div>
+
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="card text-center">
-          <div className="text-sm text-gray-600 mb-2">Contact</div>
-          <div className="text-lg font-semibold">{farmer.phone}</div>
-        </div>
-        <div className="card text-center">
-          <div className="text-sm text-gray-600 mb-2">Village</div>
-          <div className="text-lg font-semibold">{farmer.village}</div>
-        </div>
-        <div className="card text-center">
-          <div className="text-sm text-gray-600 mb-2">Field Size</div>
-          <div className="text-lg font-semibold">{farmer.size} acres</div>
-        </div>
-        <div className="card text-center">
-          <div className="text-sm text-gray-600 mb-2">Status</div>
-          <div className="text-lg font-semibold text-green-600">
-            {farmer.status}
+      {/* 2. INTERACTIVE "TRACE CROP STAGE" STEPPER */}
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-lg font-bold text-emerald-950 font-serif flex items-center gap-2">
+              <Sprout className="w-5 h-5 text-emerald-700" />
+              Trace Crop Progression Stage
+            </h2>
+            <p className="text-xs text-slate-500">Click any stage to view contextual diagnostic advisories and recommended intervention protocols.</p>
           </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className="card">
-          <h2 className="text-xl font-semibold mb-4">Field Image</h2>
-          <div className="map-placeholder">
-            <img
-              src="../../public/assets/potato.jpg"
-              alt="Detailed satellite view"
-              className="w-full h-full object-cover rounded-lg"
-            />
-          </div>
-          <div className="mt-4 grid grid-cols-2 gap-4">
-            <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <div className="text-sm text-gray-600">Coordinates</div>
-              <div className="font-semibold">28.98°N, 77.02°E</div>
-            </div>
-            <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <div className="text-sm text-gray-600">Field Area</div>
-              <div className="font-semibold">{farmer.size} acres</div>
-            </div>
-          </div>
+          <span className="text-xs font-semibold bg-emerald-100 text-emerald-900 px-3 py-1 rounded-full border border-emerald-200">
+            Current: Stage 3 (Tuber Initiation)
+          </span>
         </div>
 
-        <div className="card">
-          <h2 className="text-xl font-semibold mb-4">
-            Crop Growth Timeline (NDVI)
-          </h2>
-          <div className="chart-container">
-            <canvas id="growthChart"></canvas>
-          </div>
-          <div className="mt-4 grid grid-cols-3 gap-2">
-            <div className="text-center p-2 bg-green-50 rounded">
-              <div className="text-sm text-gray-600">NDVI Mean</div>
-              <div className="font-semibold text-green-600">{ndviMean.toFixed(2)}</div>
-            </div>
-            <div className="text-center p-2 bg-blue-50 rounded">
-              <div className="text-sm text-gray-600">NVDI STD</div>
-              <div className="font-semibold text-blue-600">{ndviStd.toFixed(2)}</div>
-            </div>
-            <div className="text-center p-2 bg-yellow-50 rounded">
-              <div className="text-sm text-gray-600">Growth Stage</div>
-              <div className="font-semibold text-yellow-600">{growthStage}</div>
-            </div>
-          </div>
-        </div>
-      </div>
+        {/* Stepper Steps Bar */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 relative">
+          {CROP_STAGES.map((stage, idx) => {
+            const isSelected = activeStage === stage.id;
+            const isCompleted = stage.status === 'completed';
+            const isActive = stage.status === 'active';
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className="card">
-          <h2 className="text-xl font-semibold mb-4">Recommendation History</h2>
-          <div className="space-y-3 max-h-80 overflow-y-auto">
-            <div className="recommendation-item">
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <div className="font-semibold">
-                    Potassium Fertilizer Application
+            return (
+              <button
+                key={stage.id}
+                onClick={() => setActiveStage(stage.id)}
+                className={`text-left p-4 rounded-xl border transition-all relative cursor-pointer ${
+                  isSelected 
+                    ? 'border-emerald-700 bg-emerald-900/5 ring-2 ring-emerald-700/20 shadow-sm' 
+                    : 'border-slate-200 hover:border-slate-300 bg-white'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    Stage 0{idx + 1}
+                  </span>
+                  {isCompleted && <CheckCircle className="w-4 h-4 text-emerald-600" />}
+                  {isActive && <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />}
+                </div>
+
+                <div className="font-semibold text-sm text-slate-900 mb-1">{stage.name}</div>
+                <div className="text-xs text-slate-500">{stage.duration}</div>
+
+                {isSelected && (
+                  <div className="mt-3 text-[11px] font-medium text-emerald-800 flex items-center gap-1">
+                    Inspecting Advisory <ChevronRight className="w-3 h-3" />
                   </div>
-                  <div className="text-sm text-gray-600">
-                    Recommended: 25kg/acre of K₂O
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Selected Stage Advisory Details Card */}
+        {selectedStage && (
+          <div className="mt-6 bg-[#FAF8F5] border border-amber-200/60 rounded-xl p-5 relative">
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-amber-100 text-amber-900 rounded-lg shrink-0">
+                <Info className="w-5 h-5" />
+              </div>
+              <div className="space-y-2 flex-1">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <h3 className="font-bold text-slate-900 text-sm">
+                    {selectedStage.name} — Technical Overview
+                  </h3>
+                  <span className="text-xs font-semibold text-emerald-800 bg-emerald-100/80 px-2.5 py-0.5 rounded-md">
+                    Target Health Score: {selectedStage.healthIndex}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-600 leading-relaxed">{selectedStage.description}</p>
+                
+                <div className="pt-3 border-t border-amber-200/40 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                  <div>
+                    <span className="font-semibold text-amber-950 block mb-1">Officer Action Advisory:</span>
+                    <p className="text-slate-700 bg-white p-2.5 rounded-lg border border-amber-100">{selectedStage.advisory}</p>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-amber-950 block mb-1">Recommended Inputs / Subsidies:</span>
+                    <p className="text-slate-700 bg-white p-2.5 rounded-lg border border-amber-100">{selectedStage.inputs}</p>
                   </div>
                 </div>
-                <span className="text-xs text-gray-500">Today</span>
-              </div>
-              <div className="text-sm text-gray-600">
-                Status: <span className="text-yellow-600">Pending</span>
-              </div>
-            </div>
-
-            <div className="recommendation-item">
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <div className="font-semibold">Irrigation Schedule</div>
-                  <div className="text-sm text-gray-600">
-                    50mm water recommended
-                  </div>
-                </div>
-                <span className="text-xs text-gray-500">2 days ago</span>
-              </div>
-              <div className="text-sm text-gray-600">
-                Status: <span className="text-green-600">Completed</span>
-              </div>
-            </div>
-
-            <div className="recommendation-item">
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <div className="font-semibold">Pest Control</div>
-                  <div className="text-sm text-gray-600">
-                    Apply neem oil spray
-                  </div>
-                </div>
-                <span className="text-xs text-gray-500">1 week ago</span>
-              </div>
-              <div className="text-sm text-gray-600">
-                Status: <span className="text-green-600">Completed</span>
-              </div>
-            </div>
-
-            <div className="recommendation-item">
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <div className="font-semibold">Soil Testing</div>
-                  <div className="text-sm text-gray-600">
-                    Comprehensive soil analysis
-                  </div>
-                </div>
-                <span className="text-xs text-gray-500">2 weeks ago</span>
-              </div>
-              <div className="text-sm text-gray-600">
-                Status: <span className="text-green-600">Completed</span>
               </div>
             </div>
           </div>
-        </div>
-        <div className="card">
-          <h2 className="text-xl font-semibold mb-4">Field Statistics</h2>
-          <div className="grid grid-cols-2 gap-4 mt-10">
-            <div className="text-center p-6 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">0.78</div>
-              <div className="text-sm text-gray-600">Current NDVI</div>
-            </div>
-            <div className="text-center p-6 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">85%</div>
-              <div className="text-sm text-gray-600">Crop Health</div>
-            </div>
-            <div className="text-center p-6 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-yellow-600">22°C</div>
-              <div className="text-sm text-gray-600">Soil Temperature</div>
-            </div>
-            <div className="text-center p-6 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-purple-600">65%</div>
-              <div className="text-sm text-gray-600">Moisture Level</div>
-            </div>
-          </div>
-        </div>
+        )}
+
       </div>
 
-      <div className="flex justify-end space-x-4 mt-6">
-        <button className="btn-primary">
-          <span className="material-icons mr-2">add_alert</span>
-          Create Alert
-        </button>
-        <button
-          className="btn-primary"
-          style={{ backgroundColor: "var(--sky-blue)" }}
-        >
-          <span className="material-icons mr-2">download</span>
-          Export Report
-        </button>
-      </div>
-    </>
+    </div>
   );
 }
-
-export default FarmerProfile;

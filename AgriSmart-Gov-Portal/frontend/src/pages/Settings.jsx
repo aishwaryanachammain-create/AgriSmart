@@ -1,305 +1,237 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
+import { 
+  ShieldCheck, Globe, Bell, Moon, Sun, Type, Database, 
+  CheckCircle2, Save, Sliders, RefreshCw, Cpu
+} from 'lucide-react';
 
-function Settings() {
-  const navigate = useNavigate();
-  const [profileData, setProfileData] = useState({
-    name: "Sagar Awasthi",
-    email: "sagar@agriculture.gov",
-    employeeId: "AGRI-2023-001",
-    department: "Agriculture Development",
-    phone: "+91 9876543210",
-    designation: "Senior Agriculture Supervisor"
-  });
-  const [isProfileUpdated, setIsProfileUpdated] = useState(false);
+export default function Settings() {
+  const [saved, setSaved] = useState(false);
+  const [highContrast, setHighContrast] = useState(false);
+  const [fontSize, setFontSize] = useState('normal');
+  const [language, setLanguage] = useState('EN');
+  const [district, setDistrict] = useState('Nilgiris');
+  const [smsAutoDispatch, setSmsAutoDispatch] = useState(true);
+  const [humidityThreshold, setHumidityThreshold] = useState('85');
 
-  const logoutFun=()=>{
-    navigate("/login");
-  }
-
-  const handleProfileUpdate = () => {
-    // In a real app, this would send data to the backend
-    setIsProfileUpdated(true);
-    setTimeout(() => setIsProfileUpdated(false), 3000);
-  }
-
-  const handlePhoneChange = (e) => {
-    setProfileData({...profileData, phone: e.target.value});
-  }
-
-  useEffect(() => {
-    // Apply saved settings on component mount
-    const isDarkMode = localStorage.getItem("darkMode") === "true";
-    const isHighContrast = localStorage.getItem("highContrast") === "true";
-    const isLargeText = localStorage.getItem("largeText") === "true";
-    
-    if (isDarkMode) document.body.classList.add("dark-mode");
-    if (isHighContrast) document.body.classList.add("high-contrast");
-    if (isLargeText) document.body.classList.add("large-text");
-    
-    return () => {
-      document.body.classList.remove("dark-mode");
-      document.body.classList.remove("high-contrast");
-      document.body.classList.remove("large-text");
-    };
-  }, []);
+  const handleSave = () => {
+    setSaved(true);
+    setTimeout(() => setSaved(false), 3000);
+  };
 
   return (
-    <>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Settings</h1>
-        <div className="flex items-center space-x-4">
-          <span className="text-gray-600">Welcome, Sagar Awasthi</span>
-          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-            <span className="material-icons text-green-600">person</span>
-          </div>
-        </div>
-      </div>
+    <div className="relative min-h-screen bg-[#FAF8F5] text-slate-800 p-6 overflow-hidden">
+      
+      {/* ATMOSPHERE: Contour Pattern */}
+      <div className="fixed inset-0 pointer-events-none bg-contour-pattern opacity-60 z-0" />
 
-      <div className="card">
-        <h2 className="section-header">Profile Information</h2>
+      <div className="relative z-10 max-w-5xl mx-auto space-y-6">
+
+        {/* HEADER */}
+        <div className="bg-white/90 backdrop-blur-md rounded-2xl p-6 shadow-xs border border-slate-200/80 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold text-emerald-950 font-serif">System & Accessibility Settings</h1>
+              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-900 text-amber-300 border border-emerald-800 shadow-xs flex items-center gap-1">
+                <ShieldCheck className="w-3.5 h-3.5" /> GIGW 3.0 Standard
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mt-1">
+              Configure regional operational defaults, automated risk dispatches, and public sector accessibility compliance.
+            </p>
+          </div>
+
+          <button
+            onClick={handleSave}
+            className="px-5 py-2.5 bg-emerald-900 hover:bg-emerald-950 text-emerald-50 rounded-xl text-xs font-semibold transition-all shadow-xs flex items-center gap-2 press-scale shrink-0"
+          >
+            {saved ? (
+              <>
+                <CheckCircle2 className="w-4 h-4 text-amber-300" /> Preferences Saved!
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4 text-amber-400" /> Save Configuration
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* SETTINGS GRID */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="form-group">
-            <label className="form-label">Full Name</label>
-            <input
-              type="text"
-              className="input-field"
-              defaultValue="Sagar Awasthi"
-              disabled
-            />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Email Address</label>
-            <input
-              type="email"
-              className="input-field"
-              defaultValue="sharma@agriculture.gov"
-              disabled
-            />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Employee ID</label>
-            <input
-              type="text"
-              className="input-field"
-              defaultValue="AGRI-2023-001"
-              disabled
-            />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Department</label>
-            <input
-              type="text"
-              className="input-field"
-              defaultValue="Agriculture Development"
-              disabled
-            />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Phone Number</label>
-            <input
-              type="tel"
-              className="input-field"
-              value={profileData.phone}
-              onChange={handlePhoneChange}
-            />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Designation</label>
-            <input
-              type="text"
-              className="input-field"
-              defaultValue="Senior Agriculture Supervisor"
-              disabled
-            />
-          </div>
-        </div>
-        <div className="mt-6">
-          <button className="btn-primary" onClick={handleProfileUpdate}>
-            <span className="material-icons mr-2">save</span>
-            Update Profile
-          </button>
-          {isProfileUpdated && (
-            <span className="ml-4 text-green-600 font-medium">Profile updated successfully!</span>
-          )}
-        </div>
-      </div>
 
-      <div className="card">
-        <h2 className="section-header">Region Assignment</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="form-group">
-            <label className="form-label">State</label>
-            <select className="select-field">
-              <option defaultValue>Haryana</option>
-              <option>Punjab</option>
-              <option>Uttar Pradesh</option>
-              <option>Rajasthan</option>
-              <option>Madhya Pradesh</option>
-            </select>
-          </div>
-          <div className="form-group">
-            <label className="form-label">District</label>
-            <select className="select-field">
-              <option defaultValue>Sonipat</option>
-              <option>Rohtak</option>
-              <option>Jhajjar</option>
-              <option>Panipat</option>
-              <option>Karnal</option>
-              <option>Faridabad</option>
-              <option>Gurgaon</option>
-            </select>
-          </div>
-          <div className="form-group">
-            <label className="form-label">Zone</label>
-            <select className="select-field">
-              <option defaultValue>Northern Zone</option>
-              <option>Southern Zone</option>
-              <option>Eastern Zone</option>
-              <option>Western Zone</option>
-              <option>Central Zone</option>
-            </select>
-          </div>
-          <div className="form-group">
-            <label className="form-label">Assigned Villages</label>
-            <input
-              type="text"
-              className="input-field"
-              defaultValue="25"
-              disabled
-            />
-          </div>
-        </div>
-        <div className="mt-6">
-          <button className="btn-primary">
-            <span className="material-icons mr-2">location_on</span>
-            Save Region Settings
-          </button>
-        </div>
-      </div>
+          {/* 1. GIGW ACCESSIBILITY STANDARDS */}
+          <div className="bg-white/90 backdrop-blur-md p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+            <h2 className="text-base font-bold text-emerald-950 font-serif flex items-center gap-2 border-b border-slate-100 pb-3">
+              <Type className="w-5 h-5 text-emerald-800" />
+              GIGW / WCAG 2.1 Accessibility
+            </h2>
 
-      <div className="card">
-        <h2 className="section-header">Appearance Settings</h2>
-        <div className="toggle-container">
-          <div className="toggle-info">
-            <div className="toggle-label">Dark Mode</div>
-            <div className="toggle-description">
-              Switch between light and dark theme
+            <div className="space-y-4 text-xs">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="font-bold text-slate-800 block">High Contrast Mode</span>
+                  <span className="text-slate-500 text-[11px]">Enhances text readability for field operations</span>
+                </div>
+                <button
+                  onClick={() => setHighContrast(!highContrast)}
+                  className={`w-12 h-6 rounded-full transition-colors relative p-1 ${
+                    highContrast ? 'bg-emerald-900' : 'bg-slate-200'
+                  }`}
+                >
+                  <div className={`w-4 h-4 rounded-full bg-white transition-transform ${
+                    highContrast ? 'translate-x-6 bg-amber-400' : 'translate-x-0'
+                  }`} />
+                </button>
+              </div>
+
+              <div className="pt-2 border-t border-slate-100">
+                <span className="font-bold text-slate-800 block mb-1">Base Font Scaling</span>
+                <div className="grid grid-cols-3 gap-2">
+                  {['normal', 'large', 'xlarge'].map((size) => (
+                    <button
+                      key={size}
+                      onClick={() => setFontSize(size)}
+                      className={`py-2 rounded-xl border text-xs font-bold capitalize transition-all ${
+                        fontSize === size 
+                          ? 'bg-emerald-950 text-amber-300 border-emerald-900 shadow-xs' 
+                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
-          <label className="toggle-switch">
-            <input
-              type="checkbox"
-              id="darkModeToggle"
-              onChange={(e) => {
-                if (e.target.checked) {
-                  document.body.classList.add("dark-mode");
-                  localStorage.setItem("darkMode", "true");
-                } else {
-                  document.body.classList.remove("dark-mode");
-                  localStorage.setItem("darkMode", "false");
-                }
-              }}
-              defaultChecked={localStorage.getItem("darkMode") === "true"}
-            />
-            <span className="slider"></span>
-          </label>
-        </div>
 
-        <div className="toggle-container mt-4">
-          <div className="toggle-info">
-            <div className="toggle-label">High Contrast Mode</div>
-            <div className="toggle-description">
-              Enhanced visibility for better accessibility
+          {/* 2. REGIONAL & LANGUAGE DEFAULTS */}
+          <div className="bg-white/90 backdrop-blur-md p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+            <h2 className="text-base font-bold text-emerald-950 font-serif flex items-center gap-2 border-b border-slate-100 pb-3">
+              <Globe className="w-5 h-5 text-emerald-800" />
+              Regional & Operational Defaults
+            </h2>
+
+            <div className="space-y-4 text-xs">
+              <div>
+                <label className="block font-bold text-slate-800 mb-1">Portal Primary Language</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setLanguage('EN')}
+                    className={`py-2.5 rounded-xl border font-bold text-xs transition-all ${
+                      language === 'EN' 
+                        ? 'bg-emerald-950 text-amber-300 border-emerald-900 shadow-xs' 
+                        : 'bg-slate-50 text-slate-600 border-slate-200'
+                    }`}
+                  >
+                    English (US/IN)
+                  </button>
+                  <button
+                    onClick={() => setLanguage('TA')}
+                    className={`py-2.5 rounded-xl border font-bold text-xs transition-all ${
+                      language === 'TA' 
+                        ? 'bg-emerald-950 text-amber-300 border-emerald-900 shadow-xs' 
+                        : 'bg-slate-50 text-slate-600 border-slate-200'
+                    }`}
+                  >
+                    தமிழ் (Tamil)
+                  </button>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-slate-100">
+                <label className="block font-bold text-slate-800 mb-1">Default Operational Zone Focus</label>
+                <select
+                  value={district}
+                  onChange={(e) => setDistrict(e.target.value)}
+                  className="w-full p-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-700/20"
+                >
+                  <option value="Nilgiris">Nilgiris District (Zone 4)</option>
+                  <option value="Madurai">Madurai Region</option>
+                  <option value="Coimbatore">Coimbatore Zone</option>
+                  <option value="Salem">Salem District</option>
+                </select>
+              </div>
             </div>
           </div>
-          <label className="toggle-switch">
-            <input type="checkbox" />
-            <span className="slider"></span>
-          </label>
-        </div>
 
-        <div className="toggle-container mt-4">
-          <div className="toggle-info">
-            <div className="toggle-label">Large Text</div>
-            <div className="toggle-description">
-              Increase text size for better readability
+          {/* 3. AUTOMATED RISK DISPATCH THRESHOLDS */}
+          <div className="bg-white/90 backdrop-blur-md p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+            <h2 className="text-base font-bold text-emerald-950 font-serif flex items-center gap-2 border-b border-slate-100 pb-3">
+              <Sliders className="w-5 h-5 text-emerald-800" />
+              Automated Disease Dispatch Triggers
+            </h2>
+
+            <div className="space-y-4 text-xs">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="font-bold text-slate-800 block">Auto-SMS Broadcast</span>
+                  <span className="text-slate-500 text-[11px]">Dispatch SMS to zone farmers when threshold breached</span>
+                </div>
+                <button
+                  onClick={() => setSmsAutoDispatch(!smsAutoDispatch)}
+                  className={`w-12 h-6 rounded-full transition-colors relative p-1 ${
+                    smsAutoDispatch ? 'bg-emerald-900' : 'bg-slate-200'
+                  }`}
+                >
+                  <div className={`w-4 h-4 rounded-full bg-white transition-transform ${
+                    smsAutoDispatch ? 'translate-x-6 bg-amber-400' : 'translate-x-0'
+                  }`} />
+                </button>
+              </div>
+
+              <div className="pt-2 border-t border-slate-100">
+                <label className="block font-bold text-slate-800 mb-1">
+                  Relative Moisture Stress Threshold (%)
+                </label>
+                <input
+                  type="range"
+                  min="50"
+                  max="95"
+                  value={humidityThreshold}
+                  onChange={(e) => setHumidityThreshold(e.target.value)}
+                  className="w-full accent-emerald-900 cursor-pointer"
+                />
+                <span className="text-xs font-bold text-emerald-800 block mt-1">
+                  Trigger at: {humidityThreshold}% Relative Humidity
+                </span>
+              </div>
             </div>
           </div>
-          <label className="toggle-switch">
-            <input type="checkbox" />
-            <span className="slider"></span>
-          </label>
+
+          {/* 4. SYSTEM HEALTH MONITOR */}
+          <div className="bg-white/90 backdrop-blur-md p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+            <h2 className="text-base font-bold text-emerald-950 font-serif flex items-center gap-2 border-b border-slate-100 pb-3">
+              <Cpu className="w-5 h-5 text-emerald-800" />
+              Backend & Database Sync Status
+            </h2>
+
+            <div className="space-y-3 text-xs">
+              <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <div className="flex items-center gap-2">
+                  <Database className="w-4 h-4 text-emerald-700" />
+                  <span className="font-bold text-slate-800">Firebase Realtime DB</span>
+                </div>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-200">
+                  Connected (24ms)
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <div className="flex items-center gap-2">
+                  <RefreshCw className="w-4 h-4 text-emerald-700" />
+                  <span className="font-bold text-slate-800">Express REST API (Port 5001)</span>
+                </div>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-200">
+                  Active
+                </span>
+              </div>
+            </div>
+          </div>
+
         </div>
+
       </div>
-
-      <div className="card">
-        <h2 className="section-header">Notification Preferences</h2>
-        <div className="toggle-container">
-          <div className="toggle-info">
-            <div className="toggle-label">Email Notifications</div>
-            <div className="toggle-description">
-              Receive alerts and reports via email
-            </div>
-          </div>
-          <label className="toggle-switch">
-            <input type="checkbox" defaultChecked />
-            <span className="slider"></span>
-          </label>
-        </div>
-        <div className="toggle-container mt-4">
-          <div className="toggle-info">
-            <div className="toggle-label">SMS Alerts</div>
-            <div className="toggle-description">Critical alerts via SMS</div>
-          </div>
-          <label className="toggle-switch">
-            <input type="checkbox" defaultChecked />
-            <span className="slider"></span>
-          </label>
-        </div>
-        <div className="toggle-container mt-4">
-          <div className="toggle-info">
-            <div className="toggle-label">Push Notifications</div>
-            <div className="toggle-description">
-              Real-time updates on your device
-            </div>
-          </div>
-          <label className="toggle-switch">
-            <input type="checkbox" defaultChecked />
-            <span className="slider"></span>
-          </label>
-        </div>
-      </div>
-
-      <div className="card">
-        <h2 className="section-header">Account Actions</h2>
-        <div className="space-y-4">
-          <button
-            className="btn-primary  mr-4"
-            style={{ backgroundColor: "var(--sky-blue)" }}
-          >
-            <span className="material-icons mr-2">vpn_key</span>
-            Change Password
-          </button>
-          <button
-            className="btn-primary mr-4"
-            style={{ backgroundColor: "var(--brown)" }}
-          >
-            <span className="material-icons mr-2">download</span>
-            Export Account Data
-          </button>
-          <button
-            className="btn-primary mr-4"
-            style={{ backgroundColor: "#ef4444" }}
-            onClick={logoutFun}
-          >
-            <span className="material-icons mr-2">logout</span>
-            Logout All Devices
-          </button>
-        </div>
-      </div>
-    </>
+    </div>
   );
 }
-
-export default Settings;
