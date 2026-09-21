@@ -7,6 +7,7 @@ import FarmerProfile from "./pages/FarmerProfile";
 import Reports from "./pages/Reports";
 import Alerts from "./pages/Alerts";
 import Settings from "./pages/Settings";
+import LandingHero from './components/LandingHero';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Route path="/reports" element={<Reports />} />
           <Route path="/alerts" element={<Alerts />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/" element={<LandingHero />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
