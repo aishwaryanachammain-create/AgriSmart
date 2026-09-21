@@ -155,19 +155,19 @@ export default function Alerts() {
           {/* Priority Threat Breakdown Bar */}
           <div className="mt-5 pt-4 border-t border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
             <div className="bg-red-50/80 p-3 rounded-xl border border-red-100">
-              <span className="text-[10px] text-red-700 font-bold uppercase block">Active Red Flags</span>
+              <span className="text-[10px] text-red-700 font-bold uppercase block">· Active Red Flags</span>
               <span className="text-xl font-bold text-red-950 font-serif mt-0.5 block">{activeAlertsCount} Threats</span>
             </div>
             <div className="bg-amber-50/80 p-3 rounded-xl border border-amber-100">
-              <span className="text-[10px] text-amber-800 font-bold uppercase block">Pest/Fungal Vectors</span>
+              <span className="text-[10px] text-amber-800 font-bold uppercase block">· Pest Vectors</span>
               <span className="text-xl font-bold text-amber-950 font-serif mt-0.5 block">{pestCount} Active</span>
             </div>
             <div className="bg-sky-50/80 p-3 rounded-xl border border-sky-100">
-              <span className="text-[10px] text-sky-800 font-bold uppercase block">Moisture Deficits</span>
+              <span className="text-[10px] text-sky-800 font-bold uppercase block">· Moisture Deficits</span>
               <span className="text-xl font-bold text-sky-950 font-serif mt-0.5 block">{moistureCount} Flagged</span>
             </div>
             <div className="bg-emerald-50/80 p-3 rounded-xl border border-emerald-100">
-              <span className="text-[10px] text-emerald-800 font-bold uppercase block">Broadcast Coverage</span>
+              <span className="text-[10px] text-emerald-800 font-bold uppercase block">· Broadcast Coverage</span>
               <span className="text-xl font-bold text-emerald-950 font-serif mt-0.5 block">100% Farmers</span>
             </div>
           </div>

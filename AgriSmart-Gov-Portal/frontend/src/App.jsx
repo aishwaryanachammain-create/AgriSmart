@@ -1,20 +1,29 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import MainLayout from "./layout/MainLayout";
-import Login from "./pages/Login";
+import LandingPage from "./pages/LandingPage";
+import NodeDashboard from "./pages/NodeDashboard";
 import Dashboard from "./pages/Dashboard";
 import Farmers from "./pages/Farmers";
 import FarmerProfile from "./pages/FarmerProfile";
 import Reports from "./pages/Reports";
 import Alerts from "./pages/Alerts";
 import Settings from "./pages/Settings";
-import LandingHero from './components/LandingHero';
+import Login from "./pages/Login";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        {/* Phase A: APC-Style Landing Page */}
+        <Route path="/" element={<LandingPage />} />
+
+        {/* Phase B: 3D Node Graph AI Dashboard */}
+        <Route path="/node-dashboard" element={<NodeDashboard />} />
+
+        {/* Authentication */}
         <Route path="/login" element={<Login />} />
+
+        {/* Main Administrative Portal Layout */}
         <Route element={<MainLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/farmers" element={<Farmers />} />
@@ -23,9 +32,10 @@ function App() {
           <Route path="/reports" element={<Reports />} />
           <Route path="/alerts" element={<Alerts />} />
           <Route path="/settings" element={<Settings />} />
-          <Route path="/" element={<LandingHero />} />
         </Route>
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+
+        {/* Catch-all fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );

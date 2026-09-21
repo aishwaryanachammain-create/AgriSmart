@@ -40,7 +40,7 @@ export default function LandingHero() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-end">
           <div className="lg:col-span-8 space-y-6">
             <h1 className="text-4xl sm:text-6xl font-serif font-normal text-white leading-tight">
-              Aandacht voor landbouw en duurzame precisie.
+              Precision Agriculture & Sustainable Crop Monitoring.
             </h1>
             <p className="text-base text-[#A7F3D0]/80 max-w-2xl leading-relaxed">
               Integrating real-time satellite telemetry, district-level farmer landholdings, and predictive node-graph intelligence for Tamil Nadu agricultural monitoring.
